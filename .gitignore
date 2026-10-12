@@ -1,0 +1,6 @@
+# Entorno local de pruebas (WordPress completo, base de datos SQLite)
+/.staging/
+/dist/
+/vendor-plugins/*.zip
+# Dependencias del plugin (se instalan con composer al empaquetar)
+wp-content/plugins/sudis-academy-core/vendor/

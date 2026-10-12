@@ -1,0 +1,27 @@
+/* SUDIS Academy: verification page, certificates table, profile form. Inherits theme fonts. */
+.sudis-verify { display: grid; gap: 1.25rem; max-width: 40rem; }
+.sudis-verify-form label { display: block; font-weight: 600; margin-bottom: .4rem; }
+.sudis-verify-row { display: flex; flex-wrap: wrap; gap: .5rem; }
+.sudis-verify-row input { flex: 1 1 16rem; min-width: 0; padding: .65rem .8rem; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 1rem; letter-spacing: .04em; text-transform: uppercase; border: 1px solid #b8c4cf; border-radius: 6px; }
+.sudis-result { border: 1px solid #d9e1e8; border-left-width: 5px; border-radius: 8px; padding: 1.1rem 1.25rem; background: #fff; }
+.sudis-result--valid { border-left-color: #2e7d4f; }
+.sudis-result--revoked, .sudis-result--none { border-left-color: #b3261e; }
+.sudis-badge { display: inline-block; font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: .3rem .6rem; border-radius: 999px; border: 1px solid currentColor; }
+.sudis-result--valid .sudis-badge { color: #2e7d4f; }
+.sudis-result--revoked .sudis-badge { color: #b3261e; }
+.sudis-result-lead { margin: .6rem 0 .9rem; }
+.sudis-result dl { display: grid; grid-template-columns: max-content 1fr; gap: .35rem 1.25rem; margin: 0; }
+.sudis-result dt { color: #566676; }
+.sudis-result dd { margin: 0; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .sudis-result dl { grid-template-columns: 1fr; } .sudis-result dd { margin-bottom: .4rem; } }
+.sudis-table-wrap { overflow-x: auto; }
+.sudis-table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+.sudis-table th, .sudis-table td { text-align: left; padding: .6rem .7rem; border-bottom: 1px solid #d9e1e8; vertical-align: middle; }
+.sudis-table th { font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: #566676; }
+.sudis-btn-sm { padding: .4rem .75rem !important; font-size: .85rem !important; white-space: nowrap; }
+.sudis-empty { padding: 1rem 1.25rem; border: 1px dashed #b8c4cf; border-radius: 8px; }
+.sudis-profile-form p { display: grid; gap: .3rem; max-width: 32rem; }
+.sudis-profile-form input, .sudis-profile-form select { padding: .55rem .7rem; border: 1px solid #b8c4cf; border-radius: 6px; font-size: 1rem; }
+.sudis-notice { padding: .6rem .9rem; background: #e8f4ec; border-radius: 6px; }
+.sudis-help { color: #566676; font-size: .9rem; }
+.sudis-table code { white-space: nowrap; }

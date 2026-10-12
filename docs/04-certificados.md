@@ -1,5 +1,9 @@
 # 4. Sistema de certificados (v2)
 
+> **Actualización:** se construyó el plan B (§4.6) como plugin `sudis-academy-core`
+> y está probado. Es la opción recomendada ahora porque elimina tres licencias
+> anuales. Instalación y uso: [05-instalacion.md](05-instalacion.md).
+
 Modelo funcional de referencia: Educadis (certificado PDF automático, número
 único y verificación por QR), con diseño propio de SUDIS.
 

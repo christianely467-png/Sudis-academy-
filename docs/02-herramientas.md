@@ -1,5 +1,12 @@
 # 2. Plugins, servicios y costos (v2)
 
+> **Actualización:** el plugin propio `sudis-academy-core` ya implementa el
+> envío del PDF, las horas/CEU, el número único, el QR y la verificación (ver
+> [05-instalacion.md](05-instalacion.md)). Con él **no hacen falta** Uncanny
+> Toolkit Pro, Uncanny CE Credits ni Certificate Verify & Share. El costo anual
+> de software queda en **LearnDash (~$259) + correo transaccional ($0–60)**.
+> Las extensiones siguen siendo una alternativa si prefieres soporte de un fabricante.
+
 Criterio: **nativo primero**, extensiones conocidas del ecosistema LearnDash después,
 y código propio solo donde no haya alternativa. Se priorizan seguridad,
 estabilidad, mantenimiento sencillo y costos recurrentes bajos.
