@@ -1,100 +1,79 @@
-# 2. Herramientas necesarias
+# 2. Plugins, servicios y costos (v2)
 
-Leyenda: **🟥 Obligatorio** · **🟨 Recomendado** · **⬜ Opcional**
+Criterio: **nativo primero**, extensiones conocidas del ecosistema LearnDash después,
+y código propio solo donde no haya alternativa. Se priorizan seguridad,
+estabilidad, mantenimiento sencillo y costos recurrentes bajos.
 
-> Los precios cambian; verifica siempre el precio vigente en la web oficial antes
-> de comprar. Las licencias anuales suelen ser por número de sitios: **la
-> licencia de 1 sitio normalmente permite también usarla en staging/local**
-> (revísalo en los términos de cada proveedor).
+> **Sobre los precios:** son referencias públicas de octubre de 2026 en USD/año.
+> Varios no se pudieron confirmar en la web oficial del fabricante y están
+> marcados "por confirmar". Verifícalos antes de comprar. Casi todos ofrecen
+> garantía de devolución (p. ej. Uncanny Owl indica 14 días): compra cuando el
+> staging esté listo para probar dentro de ese plazo.
 
-## 2.1 Base
+## 2.1 Imprescindibles (fase 1)
 
-| Herramienta | Prioridad | Para qué | Notas |
-|-------------|-----------|----------|-------|
-| Hosting WordPress gestionado | 🟥 | Servidor, SSL, staging, copias | Que ofrezca staging, PHP 8.1+, SSH/SFTP y cron real |
-| WordPress (última versión) | 🟥 | CMS | Instalación nueva en el subdominio de la academia |
-| Dominio / subdominio | 🟥 | `academia.sudisinstitute.org` | Un registro DNS en tu proveedor actual (requiere tu autorización) |
+| Plugin / servicio | Para qué | Costo aprox. | Fuente |
+|---|---|---|---|
+| **LearnDash LMS** | Cursos, quizzes, grupos, cupones, Stripe/PayPal, certificados, perfil | **$259/año** (plan Essentials, 1 sitio) — por confirmar qué plan incluye todo lo necesario | Reportes de 2026; el antiguo plan de $199 se habría retirado |
+| LearnDash Certificate Builder | Diseño del certificado con bloques | $0 (add-on oficial) | LearnDash |
+| **Uncanny Toolkit Pro** | *Email Course Certificates*: PDF adjunto por correo | Por confirmar | uncannyowl.com |
+| **Uncanny Continuing Education Credits** | Horas contacto / créditos CE, certificados CE, historial (*transcript*) | ~$149/año (por confirmar) | Reseña de terceros |
+| **LearnDash Certificate Verify & Share** (WooNinjas) | Número único, QR, página `/verificar` | Por confirmar | wooninjas.com |
+| FluentSMTP | Envío de correo autenticado | $0 | wordpress.org |
+| Brevo (300 correos/día gratis) o Amazon SES | Servicio de correo transaccional | $0 – pocos USD/mes | |
+| UpdraftPlus (si el hosting no hace copias suficientes) | Copias a almacenamiento externo | $0 | wordpress.org |
+| Wordfence o Solid Security + 2FA | Seguridad | $0 (versión gratis) | wordpress.org |
+| `sudis-academy-core` (mini-plugin propio) | Campos profesión y licencia, ajustes SUDIS | $0 (este repositorio) | |
 
-## 2.2 LMS y diseño
+**Paquete alternativo:** el *All Access Pass* de Uncanny Owl incluye Toolkit Pro,
+CE Credits, Uncanny Groups, Uncanny Codes y Tin Canny Reporting. Si el precio
+del paquete es cercano a la suma de dos plugins sueltos, conviene por incluir
+Uncanny Groups para la fase 2.
 
-| Herramienta | Prioridad | Para qué | Notas |
-|-------------|-----------|----------|-------|
-| **LearnDash LMS** | 🟥 | Cursos, lecciones, quizzes, progreso, certificados básicos, grupos | Licencia anual de pago. Incluye bloques para el editor y reportes (ProPanel) |
-| **Tema de bloques** (p. ej. *Twenty Twenty-Five*, Kadence, Astra o el tema oficial de LearnDash) | 🟥 | Diseño con el **Editor del sitio** (Build with WordPress) | Un tema de bloques permite diseñar plantillas, cabecera, pie y páginas con bloques, sin código |
-| Tema hijo `sudis-academy` | 🟨 | Guardar colores, tipografías y plantillas SUDIS en código versionado | Lo creamos nosotros en este repositorio (`theme.json`) |
-| LearnDash "Focus Mode" | 🟨 | Vista de estudio sin distracciones | Incluido en LearnDash, se activa en ajustes |
+## 2.2 Comisiones de pago (por transacción, no anuales)
 
-> **Sobre "Build with WordPress":** lo interpreto como diseñar el sitio con las
-> herramientas nativas de WordPress (Editor del sitio / editor de bloques y sus
-> patrones) en lugar de un constructor externo. Si te refieres a un producto o
-> servicio concreto con ese nombre, indícamelo y ajusto el plan.
+| Pasarela | Comisión estándar EE. UU. aprox. | Nota |
+|---|---|---|
+| Stripe | ~2.9 % + $0.30 por cargo con tarjeta | Puerto Rico opera como EE. UU. para Stripe; confirma al abrir la cuenta |
+| PayPal | ~3.5 % + $0.49 por cargo | Opcional |
 
-## 2.3 Ventas y pagos
+Confirma en LearnDash si su Stripe Connect cobra alguna comisión adicional de
+plataforma (no se encontró información pública al respecto).
 
-| Herramienta | Prioridad | Para qué | Notas |
-|-------------|-----------|----------|-------|
-| **WooCommerce** | 🟥* | Carrito, pedidos, cupones, facturación, impuestos | Gratis. *Recomendado frente al pago nativo de LearnDash por la flexibilidad de pasarelas locales y cupones |
-| **LearnDash WooCommerce Integration** | 🟥* | Inscribe automáticamente al estudiante al pagar | Add-on oficial gratuito para licencias LearnDash |
-| Pasarela Stripe (WooPayments o *Stripe for WooCommerce*) | 🟨 | Tarjetas internacionales | Modo *test* para staging |
-| PayPal Payments | 🟨 | PayPal | |
-| Pasarela local (Mercado Pago, etc.) | ⬜ | Pagos locales según tu país | Depende del país de tus estudiantes |
-| Facturación electrónica | ⬜ | Facturas fiscales | Depende de la normativa de tu país |
+## 2.3 Fase 2 (solo si hace falta)
 
-**Alternativa simple:** usar solo los pagos nativos de LearnDash (Stripe/PayPal)
-sin WooCommerce. Menos piezas, pero menos opciones de pasarela, cupones e
-informes. Recomendado solo si vas a vender pocos cursos y con tarjeta/PayPal.
+| Plugin | Cuándo | Costo |
+|---|---|---|
+| Uncanny Groups for LearnDash | Cuando las organizaciones necesiten **comprar plazas solas** (*self-service*) y asignar estudiantes con códigos | Por confirmar (incluido en All Access). **Requiere WooCommerce** |
+| WooCommerce + LearnDash WooCommerce Integration | Solo si se activa Uncanny Groups o se necesita facturación avanzada | $0 |
 
-## 2.4 Certificados y correo
+En la fase 1, las matrículas grupales se gestionan así, sin costo adicional:
+la organización paga por factura o enlace de pago de Stripe → SUDIS crea un
+**Grupo** en LearnDash con sus cursos → nombra a su responsable como
+**Group Leader** → este ve el progreso y certificados de su equipo.
 
-| Herramienta | Prioridad | Para qué | Notas |
-|-------------|-----------|----------|-------|
-| Certificados de LearnDash | 🟥 | Base para emitir certificados por curso/quiz | Nativo, pero **no adjunta el PDF al correo ni tiene verificación pública por código** |
-| **Plugin propio `sudis-academy-core`** | 🟥 | PDF personalizado, código único, QR, envío por correo con adjunto, página `/verificar` | Lo desarrollamos en este repositorio. Ver [Sistema de certificados](04-certificados.md) |
-| Dompdf (librería PHP, gratis) | 🟥 | Generar el PDF a partir de una plantilla HTML/CSS | Se empaqueta dentro del plugin propio |
-| Librería QR (p. ej. `endroid/qr-code` o `chillerlan/php-qrcode`, gratis) | 🟥 | QR que apunta a la verificación | Se empaqueta dentro del plugin propio |
-| **Plugin SMTP** (FluentSMTP o WP Mail SMTP) | 🟥 | Que los correos lleguen y no caigan en spam | FluentSMTP es gratuito |
-| Servicio transaccional (Brevo, Postmark, Amazon SES, Mailgun) | 🟥 | Envío fiable de correos | Configurar SPF, DKIM y DMARC del dominio |
-| LearnDash Notifications | ⬜ | Recordatorios (inactividad, curso por vencer) | Add-on oficial gratuito |
-| Uncanny Toolkit Pro | ⬜ | Alternativa *sin código* para enviar certificados por correo | Útil como solución rápida mientras se desarrolla el plugin propio, pero menos personalizable (sin verificación tipo Educadis) |
+## 2.4 Resumen anual estimado (fase 1)
 
-## 2.5 Registro y cuentas
+| Concepto | USD/año |
+|---|---|
+| LearnDash | ~259 |
+| Uncanny Toolkit Pro | por confirmar |
+| Uncanny CE Credits | ~149 |
+| Certificate Verify & Share | por confirmar |
+| SMTP, copias, seguridad | 0 |
+| Correo transaccional | 0 – ~60 |
+| **Subtotal confirmado** | **~408 + los dos por confirmar** |
+| Hosting | ya contratado (a confirmar en Fase 0 si necesita mejora) |
 
-| Herramienta | Prioridad | Para qué | Notas |
-|-------------|-----------|----------|-------|
-| Registro de LearnDash / WooCommerce | 🟥 | Alta de estudiantes | Nativo |
-| Campos extra (documento, país, profesión) | 🟨 | Datos para el certificado | Con el plugin propio o con un formulario (Fluent Forms / Gravity Forms + add-on de registro) |
-| Anti-spam (Cloudflare Turnstile o reCAPTCHA) | 🟨 | Evitar registros falsos | |
+Comparado con desarrollar el plugin propio de certificados: las extensiones
+tienen costo anual, pero las mantiene su fabricante y se actualizan con
+LearnDash. El plugin propio no tiene licencia, pero requiere mantenimiento
+técnico continuo. Por eso queda como plan B.
 
-## 2.6 Operación, seguridad y rendimiento
+## 2.5 Riesgos a probar en staging antes de comprar definitivamente
 
-| Herramienta | Prioridad | Para qué |
-|-------------|-----------|----------|
-| Copias de seguridad (UpdraftPlus / la del hosting) con destino remoto | 🟥 | Recuperación ante fallos |
-| Seguridad (Wordfence / Solid Security) + 2FA | 🟥 | Proteger cuentas y pagos |
-| Caché (LiteSpeed Cache / WP Rocket / la del hosting) | 🟨 | Velocidad. **Excluir** carrito, checkout, mi cuenta y páginas de curso |
-| Cloudflare | 🟨 | CDN, DNS, protección |
-| SEO (Yoast / Rank Math) | 🟨 | Posicionamiento del catálogo |
-| Analítica (Site Kit / Matomo) | ⬜ | Métricas de conversión |
-| Cumplimiento de cookies (Complianz / CookieYes) | 🟨 | Legal |
-
-## 2.7 Desarrollo
-
-| Herramienta | Para qué |
-|-------------|----------|
-| GitHub (este repositorio) | Versionar el plugin y tema propios |
-| LocalWP o `@wordpress/env` (Docker) | Entorno local |
-| Composer | Dependencias PHP del plugin (Dompdf, QR) |
-| WP-CLI | Automatizar instalación y pruebas |
-| PHPCS + WordPress Coding Standards | Calidad de código |
-| GitHub Actions | Lint automático y empaquetado `.zip` del plugin |
-
-## 2.8 Resumen de compras
-
-| Concepto | Tipo de coste |
-|----------|---------------|
-| Hosting con staging | Mensual/anual |
-| LearnDash LMS | Licencia anual |
-| Servicio de correo transaccional | Gratis hasta cierto volumen, luego por uso |
-| Pasarela de pago | Comisión por transacción |
-| Resto de plugins recomendados | Versiones gratuitas suficientes para empezar |
-| Plugin propio de certificados | Desarrollo (este repositorio), sin licencia |
+1. Que el QR y el número de WooNinjas aparezcan en el **PDF enviado por correo** por Uncanny Toolkit Pro, no solo en el que se descarga.
+2. Que Uncanny CE Credits y Certificate Verify & Share funcionen juntos en el mismo certificado.
+3. Formato del número de certificado (p. ej. `SUDIS-2026-000123`): comprobar si Verify & Share permite personalizarlo; si no, ajuste pequeño en el mini-plugin.
+4. Tildes y "ñ" en el PDF (nombres en español).
+5. Compatibilidad con el tema y los plugins actuales del sitio.

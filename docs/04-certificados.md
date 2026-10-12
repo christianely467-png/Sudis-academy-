@@ -1,137 +1,78 @@
-# 4. Sistema de certificados (tipo Educadis)
+# 4. Sistema de certificados (v2)
 
-## 4.1 Qué ofrece LearnDash de serie y qué falta
+Modelo funcional de referencia: Educadis (certificado PDF automático, número
+único y verificación por QR), con diseño propio de SUDIS.
 
-| Necesidad | LearnDash nativo | Plugin `sudis-academy-core` |
-|-----------|------------------|-----------------------------|
-| Certificado PDF al completar curso/quiz | ✅ (se genera al hacer clic en "Descargar") | ✅ generado y **guardado** al momento de aprobar |
-| Diseño personalizado | Parcial (imagen de fondo + texto con shortcodes) | ✅ plantilla HTML/CSS completa: logos, firmas, horas, nota |
-| **Envío automático por correo con PDF adjunto** | ❌ (solo enlace, con add-ons) | ✅ |
-| **Código único de verificación** | ❌ | ✅ `SUDIS-AAAA-XXXXXX` |
-| **QR + página pública de verificación** | ❌ | ✅ `/verificar/` |
-| Registro histórico inmutable, revocación, reemisión | ❌ | ✅ |
+## 4.1 Contenido del certificado
 
-## 4.2 Componentes del plugin
+| Campo | Origen | Shortcode / fuente (a validar en staging) |
+|---|---|---|
+| Logotipo SUDIS Institute | Imagen en la plantilla | Certificate Builder |
+| Nombre completo | Perfil del usuario | `[usermeta field="first_name"] [usermeta field="last_name"]` |
+| Profesión | Campo extra (mini-plugin) | `[usermeta field="sudis_profesion"]` |
+| Nº de licencia (si aplica) | Campo extra (mini-plugin) | `[usermeta field="sudis_licencia"]` (se oculta si está vacío) |
+| Título del curso | Curso | `[courseinfo show="course_title"]` |
+| Horas contacto | Uncanny CE Credits | Shortcode de créditos del plugin |
+| Fecha de finalización | LearnDash | `[courseinfo show="completed_on" format="F j, Y"]` |
+| Número único | Certificate Verify & Share | Shortcode de ID del plugin |
+| Firma autorizada | Imagen PNG transparente | Certificate Builder |
+| QR de verificación | Certificate Verify & Share | `[ld_cvss_certificate_qr_code]` |
+| Tipo (Finalización / Educación Continua) | Plantilla asignada al curso | — |
+| Nº de proveedor y entidad acreditadora (solo CE) | Texto fijo en la plantilla CE | — |
 
-```
-wp-content/plugins/sudis-academy-core/
-├── sudis-academy-core.php        # Cabecera del plugin, carga, activación (crea tabla)
-├── composer.json                 # dompdf/dompdf, chillerlan/php-qrcode
-├── includes/
-│   ├── class-installer.php       # Tabla wp_sudis_certificates, carpeta protegida
-│   ├── class-issuer.php          # Escucha hooks de LearnDash y emite el certificado
-│   ├── class-code-generator.php  # Códigos únicos no adivinables
-│   ├── class-pdf-renderer.php    # Plantilla → PDF (Dompdf) con QR embebido
-│   ├── class-mailer.php          # Correo HTML con PDF adjunto (wp_mail)
-│   ├── class-verification.php    # Shortcode/bloque [sudis_verificar] + endpoint
-│   ├── class-student-area.php    # "Mis certificados" en el panel del estudiante
-│   ├── class-course-meta.php     # Horas, plantilla y firmantes por curso
-│   └── admin/class-admin-list.php# Listado, búsqueda, reenviar, revocar, reemitir
-├── templates/
-│   ├── certificate-default.php   # Diseño del certificado (A4 horizontal)
-│   └── email-certificate.php     # Diseño del correo
-└── assets/                       # Logos, firmas, fuentes con soporte para tildes/ñ
-```
+## 4.2 Regla de emisión
 
-## 4.3 Lógica de emisión
+"Completar **todos** los módulos **y** aprobar el examen final con **80 %**":
 
-```mermaid
-flowchart TD
-    A[learndash_course_completed<br/>o learndash_quiz_completed con aprobado] --> B{¿Ya existe certificado<br/>para usuario + curso?}
-    B -- Sí --> Z[No duplicar: fin]
-    B -- No --> C{¿Cumple la regla?<br/>curso completo y/o nota ≥ mínima}
-    C -- No --> Z
-    C -- Sí --> D[Generar código único]
-    D --> E[Guardar registro en wp_sudis_certificates]
-    E --> F[Encolar tarea asíncrona<br/>Action Scheduler]
-    F --> G[Renderizar PDF con QR]
-    G --> H[Guardar PDF en carpeta protegida]
-    H --> I[Enviar correo con PDF adjunto]
-    I --> J[Marcar emailed_at]
-    I -- fallo --> K[Reintentar hasta 3 veces<br/>y avisar al administrador]
-```
+1. Progresión del curso **lineal** (no se puede saltar lecciones).
+2. Examen final como **último paso** del curso, con *nota de aprobación = 80 %*.
+3. Certificado asignado al **curso** (no al quiz): LearnDash solo marca el curso
+   como completado cuando todos los pasos están completos, incluido el examen
+   aprobado. Así se cumplen ambas condiciones sin código.
+4. Intentos del examen: definir cuántos se permiten (p. ej. 3) y si hay espera entre intentos.
 
-Decisiones de diseño:
+## 4.3 Envío y conservación
 
-- **Asíncrono:** generar PDF y enviar correo no debe bloquear la pantalla del
-  estudiante al terminar el examen. Se usa *Action Scheduler* (viene con WooCommerce).
-- **Idempotente:** un único certificado por usuario + curso; si se reintenta, se reutiliza.
-- **Inmutable:** el nombre y curso impresos se guardan en la tabla; reemitir genera un
-  nuevo código y revoca el anterior.
-- **Códigos no adivinables:** alfabeto sin caracteres ambiguos (sin 0/O, 1/I),
-  generados con `random_int()`, comprobando unicidad en la tabla.
+- **Correo automático:** Uncanny Toolkit Pro → módulo *Email Course Certificates*:
+  al completar el curso envía el PDF adjunto al estudiante (y copia opcional a
+  administración). Asunto y cuerpo editables con datos del estudiante y curso.
+- **Perfil:** el bloque/shortcode de perfil de LearnDash lista los cursos
+  completados con su enlace de certificado para descargar en cualquier momento.
+- **Archivo histórico:** Uncanny CE Credits ofrece guardar los PDF en el
+  servidor y un historial (*transcript*) de horas/créditos por estudiante, útil
+  para auditorías de educación continua.
 
-## 4.4 Esbozo de código (referencia para la Fase 7)
+## 4.4 Verificación pública
 
-> Esbozo para validar el diseño; la implementación definitiva se hará y probará en
-> la Fase 7. Los nombres de hooks son los documentados por LearnDash; se
-> verificarán contra la versión instalada.
+- Página `/academia/verificar/` con el formulario de Certificate Verify & Share.
+- El QR del certificado abre directamente la verificación de ese certificado.
+- Datos mostrados: nombre, curso, horas, fecha, estado. **No** se muestra el nº de licencia ni el correo.
 
-```php
-// includes/class-issuer.php (extracto)
-add_action( 'learndash_course_completed', function ( $data ) {
-    $user_id   = $data['user']->ID;
-    $course_id = $data['course']->ID;
-    \Sudis\Academy\Issuer::maybe_issue( $user_id, $course_id );
-} );
+## 4.5 Mini-plugin `sudis-academy-core` (lo único propio en fase 1)
 
-add_action( 'learndash_quiz_completed', function ( $quiz_data, $user ) {
-    if ( empty( $quiz_data['pass'] ) || empty( $quiz_data['course'] ) ) {
-        return;
-    }
-    $quiz_id = is_object( $quiz_data['quiz'] ) ? $quiz_data['quiz']->ID : (int) $quiz_data['quiz'];
-    \Sudis\Academy\Issuer::maybe_issue(
-        $user->ID,
-        $quiz_data['course']->ID,
-        $quiz_id,
-        (float) $quiz_data['percentage']
-    );
-}, 10, 2 );
-```
+Alcance reducido y de bajo mantenimiento:
 
-```php
-// includes/class-mailer.php (extracto)
-$sent = wp_mail(
-    $user->user_email,
-    sprintf( '¡Felicitaciones! Tu certificado de %s', $cert->course_title ),
-    $html_body,
-    array( 'Content-Type: text/html; charset=UTF-8' ),
-    array( $cert->file_path ) // PDF adjunto
-);
-```
+- Campos *Profesión* (lista + "Otra") y *Nº de licencia* (opcional) en el
+  registro y en el perfil.
+- Validación básica y saneamiento de los datos.
+- Bloqueo de edición del nombre y la licencia después de emitido un
+  certificado (para que el PDF y la verificación coincidan); cambios solo por administración.
+- Si hace falta: formato del número de certificado `SUDIS-AAAA-NNNNNN`.
 
-## 4.5 Diseño del certificado (a definir contigo)
+## 4.6 Plan B: plugin de certificados propio
 
-Formato A4 horizontal. Elementos propuestos:
+Solo si las extensiones fallan las pruebas de la Fase 7 (p. ej. el QR no aparece
+en el PDF enviado por correo, o no se puede cumplir algún requisito de una
+entidad acreditadora). Diseño ya previsto:
 
-- Logo SUDIS Institute (y de aliados si aplica).
-- Título: "CERTIFICADO DE APROBACIÓN" / "DE PARTICIPACIÓN".
-- "Se otorga a **NOMBRE COMPLETO**", documento de identidad (opcional).
-- "Por haber completado y aprobado el curso **TÍTULO DEL CURSO**".
-- Carga horaria, nota final, fecha de emisión, ciudad.
-- Firmas digitalizadas y cargos (1–3 firmantes).
-- Código de verificación + QR + texto "Verifique en sudisinstitute.org/verificar" (o en el subdominio de la academia).
-- Fondo/borde con la identidad gráfica SUDIS.
+- Escucha `learndash_course_completed`, genera el PDF con Dompdf a partir de una
+  plantilla HTML, número único y QR propios, tabla `wp_sudis_certificates`,
+  envío con `wp_mail` y página de verificación propia.
+- Ventaja: control total y sin licencias. Desventaja: el mantenimiento recae en SUDIS.
 
-Necesito de ti: logo vectorial, firmas escaneadas en PNG con fondo transparente,
-nombres/cargos de firmantes y, si tienes, un certificado actual de referencia.
+## 4.7 Material que necesito de ti
 
-## 4.6 Correo del certificado
-
-- **Asunto:** ¡Felicitaciones! Tu certificado de {curso}
-- **Cuerpo:** saludo con el nombre, mensaje de felicitación, código de verificación,
-  botón "Verificar certificado", botón "Ir a mi panel", invitación a otros cursos.
-- **Adjunto:** `Certificado-SUDIS-{codigo}.pdf`
-- **Remitente:** `academia@sudisinstitute.org` (configurado en SMTP con SPF/DKIM/DMARC).
-
-## 4.7 Plan B sin código (mientras se desarrolla el plugin)
-
-Si necesitas lanzar antes de terminar la Fase 7:
-
-1. Certificado nativo de LearnDash con imagen de fondo SUDIS y shortcodes
-   (`[usermeta field="display_name"]`, `[courseinfo show="course_title"]`,
-   `[courseinfo show="completed_on" format="d/m/Y"]`).
-2. Envío por correo del PDF con un add-on (p. ej. el módulo de envío de certificados
-   de Uncanny Toolkit Pro) o, al menos, enlace de descarga con LearnDash Notifications.
-3. Sin verificación pública hasta que esté el plugin propio; luego se pueden
-   generar retroactivamente los códigos para los certificados ya emitidos.
+- Logotipo original (SVG o PNG de alta resolución).
+- Firma(s) autorizada(s) en PNG con fondo transparente, nombre y cargo del firmante.
+- Lista de profesiones a mostrar en el registro.
+- Para cursos acreditados: entidad acreditadora, nº de proveedor y requisitos de la entidad sobre el certificado.

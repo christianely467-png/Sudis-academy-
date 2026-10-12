@@ -1,172 +1,164 @@
-# 1. Arquitectura de SUDIS Academy
+# 1. Arquitectura de SUDIS Academy (v2)
 
-## 1.1 Objetivos funcionales
+> v2 — Actualizada con tus decisiones: academia **dentro del sitio actual** en
+> `sudisinstitute.org/academia`, desarrollo solo en **staging**, público de
+> Puerto Rico y EE. UU., cobro en **USD**, y prioridad a **funciones nativas de
+> LearnDash y extensiones compatibles** antes que código propio.
 
-| Objetivo | Cómo se resuelve |
-|----------|------------------|
-| Los estudiantes se registran | Registro de LearnDash / WooCommerce + correo de bienvenida |
-| Compran cursos | WooCommerce (pasarelas Stripe / PayPal / locales) → inscripción automática en LearnDash |
-| Estudian y completan evaluaciones | Cursos, lecciones, temas y cuestionarios (*quizzes*) de LearnDash |
-| Reciben un certificado PDF personalizado por correo | Plugin propio `sudis-academy-core`: genera PDF, asigna código único, lo adjunta por correo |
-| Terceros verifican el certificado | Página pública `/verificar` con código o QR (como Educadis) |
+## 1.1 Requisitos y cómo se cubren
 
-## 1.2 Decisión de despliegue: ¿dónde vive la academia?
+| Requisito | Solución propuesta | Tipo |
+|-----------|--------------------|------|
+| Registro de estudiantes | Registro de LearnDash | Nativo |
+| Profesión y nº de licencia | Campos extra de registro/perfil | Mini-plugin propio (pequeño) |
+| Cursos gratuitos y de pago | Modos de acceso *Abierto/Gratis* y *Comprar ahora* | Nativo |
+| Tarjeta crédito/débito (Stripe) | Stripe Connect de LearnDash | Nativo |
+| PayPal (opcional) | PayPal de LearnDash | Nativo |
+| Cupones | Cupones de LearnDash | Nativo |
+| Matrícula grupal para organizaciones | Grupos de LearnDash + *Group Leader* (fase 1); compra de plazas *self-service* con Uncanny Groups (fase 2) | Nativo → Extensión |
+| Evaluación final ≥ 80 % | Quiz final con nota de aprobación 80 % como último paso del curso | Nativo |
+| Certificado al completar módulos **y** aprobar | Certificado de curso (se otorga al completar todos los pasos, incluido el quiz) | Nativo |
+| Diseño propio del certificado | LearnDash Certificate Builder (bloques) | Add-on oficial gratuito |
+| Horas contacto / educación continua | Uncanny Continuing Education Credits | Extensión |
+| Finalización vs. educación continua acreditada | Dos plantillas de certificado; los cursos acreditados usan la de CE | Nativo + extensión |
+| Envío automático del PDF por correo | Uncanny Toolkit Pro → *Email Course Certificates* (o el envío de Uncanny CE) | Extensión |
+| Conservar el certificado en su perfil | Perfil de LearnDash (descarga) + "Mis certificados" | Nativo |
+| Número único + QR + verificación pública | WooNinjas *LearnDash Certificate Verify & Share* | Extensión |
+| Correo fiable | FluentSMTP + servicio transaccional | Gratis / uso |
 
-Para cumplir la regla de **no tocar el sitio actual**, se recomienda:
+**Conclusión:** casi todo se logra con LearnDash y 3 extensiones. Solo se necesita
+código propio para los **campos de profesión y licencia** (y quizá para formatear
+el número de certificado). El plugin propio de certificados completo queda como
+**plan B** si las extensiones no superan las pruebas en staging.
 
-**Opción recomendada — instalación separada en subdominio**
-`academia.sudisinstitute.org` (o `academy.`), con su propia instalación de WordPress.
+## 1.2 Ubicación: `sudisinstitute.org/academia`
 
-- ✅ Cero riesgo para el sitio institucional actual (otra base de datos, otros plugins).
-- ✅ LearnDash + WooCommerce cargan muchos recursos; aislados no ralentizan el sitio principal.
-- ✅ Se puede probar, romper y reinstalar sin afectar nada.
-- ➖ El sitio principal solo necesita (cuando autorices) un enlace/menú "Academia".
-- ➖ Las cuentas de usuario son independientes del sitio principal (normalmente no es un problema: los estudiantes solo usan la academia).
+La academia vive en el **mismo WordPress** que el sitio institucional.
 
-**Alternativa — misma instalación de `sudisinstitute.org`**
-Solo si necesitas que los mismos usuarios del sitio actual entren a los cursos.
-Implica instalar plugins en el sitio en producción, por lo que exigiría tu
-autorización explícita en cada paso y un staging clonado del sitio actual.
+| URL | Contenido |
+|-----|-----------|
+| `/academia/` | Página de inicio de la academia (diseñada con bloques) |
+| `/academia/cursos/` | Catálogo de cursos |
+| `/academia/cursos/{curso}/` | Ficha del curso; lecciones y quiz cuelgan de aquí |
+| `/academia/mi-cuenta/` | Panel del estudiante: cursos, progreso, certificados |
+| `/academia/organizaciones/` | Información y solicitud de matrículas grupales |
+| `/academia/verificar/` | Verificación pública de certificados |
 
-> La guía asume la opción recomendada. Si prefieres la alternativa, los pasos son
-> los mismos pero el staging se crea **clonando** el sitio actual.
+> Los *slugs* de LearnDash se configuran en *LearnDash → Ajustes → Enlaces
+> permanentes*. Se probará en staging si acepta el prefijo `academia/`; si no,
+> el catálogo quedará en `/cursos/` y la portada en `/academia/`.
+
+Riesgos de integrar en el sitio actual, y cómo se controlan:
+
+| Riesgo | Control |
+|--------|---------|
+| Un plugin nuevo rompe el sitio publicado | Todo se prueba antes en staging; copia completa antes de pasar a producción |
+| Más carga en el servidor | Revisar recursos del hosting (Fase 0); caché que excluya páginas de cursos y pago |
+| Conflictos con el tema o plugins actuales | Inventario de plugins actuales en Fase 0 y pruebas en staging |
+| Usuarios estudiantes en el mismo WordPress | Rol *Suscriptor/Estudiante* sin acceso al escritorio; 2FA para administradores |
 
 ## 1.3 Diagrama de componentes
 
 ```mermaid
 flowchart LR
-    subgraph Visitante
-        B[Navegador del estudiante]
-        V[Empleador / tercero que verifica]
+    subgraph Personas
+        E[Estudiante]
+        O[Organización / Group Leader]
+        V[Empleador o junta que verifica]
     end
 
-    subgraph "academia.sudisinstitute.org (WordPress)"
-        T[Tema de bloques + Editor de sitio<br/>diseño SUDIS]
-        LD[LearnDash LMS<br/>cursos · lecciones · quizzes · progreso]
-        WC[WooCommerce<br/>catálogo · carrito · pedidos · cupones]
-        INT[LearnDash–WooCommerce<br/>integración oficial]
-        CORE[sudis-academy-core<br/>plugin propio]
-        SMTP[Plugin SMTP]
-        SEC[Seguridad · Caché · Copias]
+    subgraph "sudisinstitute.org (WordPress actual)"
+        SITE[Sitio institucional<br/>tema e identidad actuales]
+        ACA["/academia — páginas de bloques"]
+        LD[LearnDash LMS<br/>cursos · quizzes · grupos · cupones<br/>Stripe y PayPal nativos]
+        CB[Certificate Builder]
+        CE[Uncanny CE Credits<br/>horas y certificados CE]
+        TK[Uncanny Toolkit Pro<br/>envío del PDF por correo]
+        VS[Certificate Verify & Share<br/>número único · QR · /verificar]
+        MINI[sudis-academy-core<br/>profesión · licencia]
+        SMTP[FluentSMTP]
     end
 
-    subgraph Servicios externos
-        PAY[Pasarela de pago<br/>Stripe / PayPal / Mercado Pago]
-        MAIL[Servicio de correo transaccional<br/>Brevo / Postmark / Amazon SES]
-        BK[Almacenamiento de copias<br/>remoto]
+    subgraph Externos
+        ST[Stripe]
+        PP[PayPal]
+        MAIL[Brevo / Amazon SES]
     end
 
-    B --> T --> LD
-    B --> WC --> PAY
-    WC --> INT --> LD
-    LD -- "curso / quiz completado" --> CORE
-    CORE -- "PDF + código" --> SMTP --> MAIL --> B
-    V -- "/verificar?codigo=..." --> CORE
-    SEC --> BK
+    SITE --- ACA --> LD
+    E --> ACA
+    O --> LD
+    LD --> ST & PP
+    MINI --> LD
+    LD --> CB --> TK --> SMTP --> MAIL --> E
+    CE --> CB
+    VS --> CB
+    V --> VS
 ```
 
-## 1.4 Flujo principal del estudiante
+## 1.4 Flujo del estudiante
 
 ```mermaid
 sequenceDiagram
     actor E as Estudiante
-    participant WP as WordPress
-    participant WC as WooCommerce
-    participant P as Pasarela de pago
     participant LD as LearnDash
-    participant C as sudis-academy-core
-    participant M as Correo (SMTP)
+    participant S as Stripe / PayPal
+    participant C as Certificados (Builder + CE + Verify)
+    participant T as Toolkit Pro + SMTP
 
-    E->>WP: Visita catálogo de cursos
-    E->>WC: Añade curso al carrito y paga
-    WC->>P: Cobro
-    P-->>WC: Pago aprobado
-    WC->>WP: Crea cuenta (si no existe) + pedido "Completado"
-    WC->>LD: Inscribe al estudiante en el curso
-    M-->>E: Bienvenida + acceso al curso
-    E->>LD: Estudia lecciones
-    E->>LD: Rinde la evaluación final
-    LD->>LD: Calcula nota (≥ nota mínima)
-    LD->>C: Hook learndash_course_completed
-    C->>C: Genera código único + QR + PDF
-    C->>C: Guarda registro del certificado
-    C->>M: Envía correo con PDF adjunto
-    M-->>E: "¡Felicitaciones! Tu certificado SUDIS"
+    E->>LD: Se registra (nombre, profesión, licencia)
+    alt Curso de pago
+        E->>S: Paga en USD (con cupón opcional)
+        S-->>LD: Pago confirmado
+    end
+    LD-->>E: Inscripción inmediata
+    E->>LD: Completa todos los módulos
+    E->>LD: Examen final
+    LD->>LD: ¿Nota ≥ 80 %?
+    LD->>C: Curso completado
+    C->>C: Número único + QR + horas/créditos
+    C->>T: Certificado PDF
+    T-->>E: Correo con PDF adjunto
+    E->>LD: Lo descarga cuando quiera desde su perfil
 ```
 
-## 1.5 Flujo de verificación pública
+## 1.5 Tipos de certificado
+
+| | Certificado de finalización | Certificado de educación continua acreditada |
+|---|---|---|
+| Uso | Cursos no acreditados | Cursos aprobados por una junta/entidad acreditadora |
+| Título | "Certificado de Finalización" | "Certificado de Educación Continua" |
+| Horas | Horas contacto del curso | Horas contacto + créditos CE/CEU |
+| Datos extra | — | Nº de proveedor/aprobación, entidad acreditadora, profesión y licencia del participante |
+| Plantilla | `SUDIS – Finalización` | `SUDIS – Educación Continua` |
+
+Cada curso tiene asignada una de las dos plantillas.
+
+> Para cursos acreditados en Puerto Rico o EE. UU., la junta correspondiente
+> suele exigir datos concretos en el certificado (nº de proveedor, horas,
+> fecha, firma). Confirma esos requisitos con cada entidad acreditadora antes de
+> cerrar el diseño de la plantilla CE.
+
+## 1.6 Entornos
 
 ```mermaid
 flowchart LR
-    Q[QR o código impreso<br/>en el certificado] --> U["/verificar/?codigo=SUDIS-2026-7K3P9Q"]
-    U --> C{¿Existe y está vigente?}
-    C -- Sí --> OK[Muestra: nombre, curso, horas,<br/>fecha, nota, estado VÁLIDO]
-    C -- No / revocado --> KO[Certificado no encontrado<br/>o revocado]
+    P0[Producción actual<br/>sudisinstitute.org] -- "copia (solo lectura)" --> S[Staging<br/>clon del sitio · contraseña · noindex]
+    S -- "pruebas aprobadas + tu autorización" --> P1[Producción<br/>sudisinstitute.org/academia]
+    G[(GitHub<br/>mini-plugin y documentación)] --> S
 ```
 
-## 1.6 Modelo de datos
+## 1.7 Requisitos técnicos
 
-LearnDash ya guarda cursos, lecciones, quizzes, progreso e intentos. WooCommerce
-guarda productos, pedidos y clientes. El plugin propio solo añade **una tabla**
-para los certificados emitidos:
+- PHP 8.1+, WordPress 6.8+ (requisito de Certificate Verify & Share), MySQL 8 / MariaDB 10.6+, HTTPS.
+- `memory_limit` ≥ 256 MB; extensiones `gd`/`imagick`, `mbstring` (PDF y QR).
+- Cron real del servidor para los correos.
+- Webhooks de Stripe accesibles (no bloqueados por firewall).
 
-**Tabla `wp_sudis_certificates`**
+## 1.8 Seguridad y privacidad
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `id` | BIGINT PK | Identificador interno |
-| `code` | VARCHAR(32) UNIQUE | Código público, p. ej. `SUDIS-2026-7K3P9Q` |
-| `user_id` | BIGINT | Estudiante (WordPress) |
-| `course_id` | BIGINT | Curso LearnDash |
-| `quiz_id` | BIGINT NULL | Evaluación que lo habilitó (opcional) |
-| `student_name` | VARCHAR(190) | Nombre tal como se imprimió (inmutable) |
-| `course_title` | VARCHAR(255) | Título tal como se imprimió (inmutable) |
-| `hours` | SMALLINT | Carga horaria |
-| `score` | DECIMAL(5,2) NULL | Nota obtenida |
-| `issued_at` | DATETIME | Fecha de emisión |
-| `status` | ENUM('valid','revoked') | Estado |
-| `file_path` | VARCHAR(255) | Ruta del PDF en carpeta protegida |
-| `emailed_at` | DATETIME NULL | Última vez que se envió por correo |
-
-Se guardan copias del nombre y título para que el certificado verificado siempre
-coincida con el PDF impreso, aunque luego cambie el curso o el perfil.
-
-Metadatos adicionales por curso (campos del curso en el editor):
-
-- `_sudis_hours` — carga horaria.
-- `_sudis_certificate_template` — plantilla de diseño a usar.
-- `_sudis_signatories` — firmas/cargos que aparecen en el certificado.
-
-## 1.7 Entornos
-
-```mermaid
-flowchart LR
-    L[Local<br/>LocalWP / wp-env] --> G[(GitHub<br/>este repositorio)]
-    G --> S[Staging<br/>staging.academia.sudisinstitute.org<br/>protegido con contraseña · noindex]
-    S -- "solo con tu autorización" --> P[Producción<br/>academia.sudisinstitute.org]
-```
-
-| Entorno | Uso | Datos |
-|---------|-----|-------|
-| Local | Desarrollo del plugin propio | Ficticios |
-| Staging | Pruebas completas, pagos en modo *test*, revisión tuya | Ficticios |
-| Producción | Estudiantes reales | Reales |
-
-## 1.8 Requisitos técnicos del hosting
-
-- PHP 8.1 o superior, MySQL 8 / MariaDB 10.6+, HTTPS.
-- `memory_limit` ≥ 256 MB, `max_execution_time` ≥ 120 s.
-- Extensiones PHP: `gd` o `imagick`, `mbstring`, `dom`, `zip` (necesarias para PDF y QR).
-- Cron real del servidor (no depender solo de WP-Cron) para envíos de correo en cola.
-- Staging con un clic (la mayoría de hostings gestionados lo ofrecen).
-- Copias de seguridad diarias.
-
-## 1.9 Seguridad y privacidad
-
-- Los PDF se guardan **fuera del acceso público directo** (carpeta con `.htaccess`
-  `deny`/regla Nginx) y se descargan mediante un enlace con permiso.
-- La página de verificación solo muestra datos mínimos (nombre, curso, fecha,
-  estado), nunca correo ni documento de identidad.
-- Política de privacidad y términos aceptados en el registro y en el *checkout*.
-- Autenticación en dos pasos para administradores; roles separados
-  (Administrador, Instructor/Group Leader, Estudiante).
+- El número de licencia es dato personal: se muestra en el certificado, pero **no**
+  en la página pública de verificación (solo nombre, curso, horas, fecha, estado).
+- 2FA para administradores; estudiantes sin acceso al escritorio de WordPress.
+- Pagos en Stripe/PayPal: los datos de tarjeta nunca pasan por el servidor.
+- Copias diarias con destino fuera del servidor.

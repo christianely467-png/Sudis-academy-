@@ -1,7 +1,7 @@
 # SUDIS Academy
 
 Plataforma educativa de **SUDIS Institute** (`sudisinstitute.org`) construida sobre
-**WordPress + LearnDash**, con venta de cursos, evaluaciones y emisión automática
+**WordPress + LearnDash**, integrada en `sudisinstitute.org/academia`, con venta de cursos, evaluaciones y emisión automática
 de **certificados PDF personalizados enviados por correo**, con código de
 verificación (modelo tipo Educadis).
 
@@ -13,19 +13,21 @@ verificación (modelo tipo Educadis).
 
 | # | Documento | Contenido |
 |---|-----------|-----------|
+| 0 | [Verificación del hosting](docs/00-verificacion-hosting.md) | Lista de solo lectura para identificar hosting, staging, copias y permisos |
 | 1 | [Arquitectura](docs/01-arquitectura.md) | Componentes, flujos (registro → compra → curso → evaluación → certificado), modelo de datos, entornos |
 | 2 | [Herramientas](docs/02-herramientas.md) | Plugins, servicios, licencias y alternativas, qué es obligatorio y qué opcional |
 | 3 | [Guía paso a paso](docs/03-guia-paso-a-paso.md) | Fases 0–8 con tareas concretas, criterios de aceptación y puntos donde se pide tu autorización |
-| 4 | [Sistema de certificados](docs/04-certificados.md) | Diseño del módulo de certificados PDF + correo + verificación pública |
+| 4 | [Sistema de certificados](docs/04-certificados.md) | Certificados con LearnDash + extensiones (PDF, correo, QR, verificación) y plan B propio |
 
 ## Estado actual
 
-- [x] Fase 0 — Arquitectura y selección de herramientas (este repositorio)
-- [ ] Fase 1 — Entorno staging
-- [ ] Fase 2 — Instalación base (LearnDash, tema, WooCommerce)
-- [ ] Fase 3 — Diseño visual con el editor de bloques
-- [ ] Fase 4 — Registro y cuentas de estudiantes
-- [ ] Fase 5 — Venta de cursos y pagos
+- [x] Arquitectura v2 y selección de herramientas (nativo + extensiones)
+- [ ] Fase 0 — Verificación del hosting (en curso)
+- [ ] Fase 1 — Staging (clon del sitio actual)
+- [ ] Fase 2 — Instalación base en staging (LearnDash, SMTP, mini-plugin)
+- [ ] Fase 3 — Diseño de la academia con la identidad de SUDIS
+- [ ] Fase 4 — Registro (profesión y licencia)
+- [ ] Fase 5 — Pagos Stripe/PayPal en modo prueba, cupones, grupos
 - [ ] Fase 6 — Cursos y evaluaciones
 - [ ] Fase 7 — Certificados PDF automáticos por correo
 - [ ] Fase 8 — Pruebas, seguridad y lanzamiento (requiere tu autorización)
@@ -37,8 +39,7 @@ Sudis-academy-/
 ├── README.md
 ├── docs/                       # Arquitectura y guías
 └── wp-content/                 # (fases siguientes) solo código propio, versionado
-    ├── plugins/sudis-academy-core/   # Plugin propio: certificados, verificación, ajustes
-    └── themes/sudis-academy/         # Tema hijo de bloques (si se necesita)
+    └── plugins/sudis-academy-core/   # Mini-plugin propio: campos profesión/licencia
 ```
 
 En este repositorio solo se versiona **código propio** (plugin y tema hijo). Los
