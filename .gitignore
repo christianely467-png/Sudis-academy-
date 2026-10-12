@@ -4,3 +4,7 @@
 /vendor-plugins/*.zip
 # Dependencias del plugin (se instalan con composer al empaquetar)
 wp-content/plugins/sudis-academy-core/vendor/
+scripts/learndash-pilot/state.json
+scripts/learndash-pilot/ids.json
+scripts/learndash-pilot/*.png
+scripts/learndash-pilot/*.pdf

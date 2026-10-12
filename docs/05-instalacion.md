@@ -96,10 +96,24 @@ sequenceDiagram
 - WP-CLI: `wp sudis list`, `wp sudis issue --user=<correo> --course=<id>`,
   `wp sudis deliver <número>`, `wp sudis sample muestra.pdf --type=ce`.
 
-## 5.5 Limitaciones conocidas
+## 5.5 Prueba con LearnDash real (demo 5.2.0)
 
-- Probado con WordPress 6.8.3 y PHP 8.3 simulando los eventos de LearnDash; falta
-  la prueba con LearnDash real (necesita tu licencia).
+En la demo gratuita de LearnDash se creó el curso piloto por API
+([scripts/learndash-pilot](../scripts/learndash-pilot/README.md)) y se recorrió
+con dos estudiantes en un navegador real:
+
+- María: 3 módulos completados, examen 100 % → curso **completado** y certificado nativo descargado.
+- Pedro: 3 módulos completados, examen 60 % → curso **en progreso**, sin certificado.
+
+Conclusión: la regla "todos los módulos + examen ≥ 80 %" funciona con LearnDash
+sin código, y los datos del intento (`quiz`, `course`, `percentage`, `pass`)
+coinciden con lo que lee el plugin. La demo **no permite subir plugins**, así
+que `sudis-academy-core` no se pudo instalar allí; se probará en tu staging.
+
+## 5.6 Limitaciones conocidas
+
+- `sudis-academy-core` está probado con WordPress 6.8.3 y PHP 8.3 simulando el
+  evento de LearnDash; falta instalarlo junto a LearnDash real (en tu staging).
 - WP-Cron depende de visitas: en producción conviene un cron real del servidor
   (`*/5 * * * * wget -q -O - https://sudisinstitute.org/wp-cron.php?doing_wp_cron`).
 - Si el formulario de registro de LearnDash no muestra los campos de profesión y
